@@ -1,14 +1,15 @@
-# Module 13: JWT Login/Registration with Client-Side Validation & Playwright E2E
+# Module 14: Complete BREAD Functionality for Calculations
 
 ## Overview
 
-A FastAPI application with JWT-based authentication (login & registration), front-end HTML pages with client-side validation, and Playwright end-to-end tests.
+A FastAPI application with JWT-based authentication, full BREAD (Browse, Read, Edit, Add, Delete) front-end for calculations, and comprehensive Playwright end-to-end tests. Built incrementally from Modules 10–13.
 
-## What's New in Module 13
+## What's New in Module 14
 
-- **JWT Authentication**: Login and register endpoints return JWT tokens
-- **Front-End Pages**: `login.html` and `register.html` with client-side validation
-- **Playwright E2E Tests**: 9 tests covering positive and negative scenarios
+- **Calculations Dashboard**: `calculations.html` with full BREAD operations UI
+- **User-Scoped Data**: Browse endpoint filters calculations by logged-in user
+- **Auto Redirect**: Login/Register success redirects to calculations page
+- **Extended E2E Tests**: 16 Playwright tests covering login, register, and all BREAD operations (positive + negative scenarios)
 
 ## API Endpoints
 
@@ -17,11 +18,17 @@ A FastAPI application with JWT-based authentication (login & registration), fron
 | POST | `/users/register` | Register a new user, returns JWT token |
 | POST | `/users/login` | Login with credentials, returns JWT token |
 | GET | `/users/{user_id}` | Get user by ID |
-| GET | `/calculations` | Browse all calculations |
+| GET | `/calculations` | Browse calculations (filterable by user_id) |
 | GET | `/calculations/{id}` | Read a single calculation |
 | POST | `/calculations` | Add a new calculation |
 | PUT | `/calculations/{id}` | Edit an existing calculation |
 | DELETE | `/calculations/{id}` | Delete a calculation |
+
+## Front-End Pages
+
+- `/login` — Login page with client-side validation
+- `/register` — Registration page with client-side validation
+- `/calculations-page` — Calculations BREAD dashboard (requires login)
 
 ## How to Run Locally
 
@@ -33,8 +40,9 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-- Login page: http://localhost:8000/login
-- Register page: http://localhost:8000/register
+- Login: http://localhost:8000/login
+- Register: http://localhost:8000/register
+- Calculations: http://localhost:8000/calculations-page
 - Swagger UI: http://localhost:8000/docs
 
 ## How to Run Tests

@@ -46,6 +46,11 @@ def login_page():
 def register_page():
     return FileResponse("static/register.html")
 
+@app.get("/calculations-page")
+def calculations_page():
+    """Serve the calculations BREAD page."""
+    return FileResponse("static/calculations.html")
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -102,7 +107,9 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     return user
 
 @app.get("/calculations", response_model=List[CalculationRead])
-def browse_calculations(db: Session = Depends(get_db)):
+def browse_calculations(user_id: int = None, db: Session = Depends(get_db)):
+    if user_id:
+        return db.query(Calculation).filter(Calculation.user_id == user_id).all()
     return db.query(Calculation).all()
 
 @app.get("/calculations/{calc_id}", response_model=CalculationRead)
