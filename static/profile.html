@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile</title>
+    <style>
+        /* === 全局重置 === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* === 整个页面 === */
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        /* === 内容容器 (居中 + 最大宽度) === */
+        .page {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* === 页面顶部标题 === */
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        /* === 卡片样式 (白色背景 + 圆角 + 阴影) === */
+        .card {
+            background: #fff;
+            padding: 28px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        /* ============ 以下是 Part 2B 新加的 ============ */
+
+        /* === 卡片标题 (例如 "Profile Information") === */
+        .card-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        /* === 表单行 (label + input 一组) === */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #555;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4a90d9;
+        }
+
+        /* === 信息显示行 (不可编辑, 例如 Member since) === */
+        .info-row {
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-row strong {
+            color: #333;
+        }
+
+        /* ============ 以下是 Part 3A 新加的 ============ */
+
+        /* === 主要按钮 (蓝色, 大) === */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #4a90d9;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: #357abd;
+        }
+
+        .btn:disabled {
+            background: #aac8e6;
+            cursor: not-allowed;
+        }
+
+        /* === Toast 通知 (浮在屏幕底部中央) === */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 14px 24px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #e74c3c;
+        }
+
+        /* ============ Part 4A: 密码强度条 ============ */
+
+        /* 强度条容器 (初始隐藏, 输入密码时显示) */
+        .strength-wrapper {
+            margin-top: 8px;
+            display: none;
+        }
+
+        /* 强度条背景 (灰色长条) */
+        .strength-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        /* 强度条填充 (根据强度变红/黄/绿) */
+        .strength-fill {
+            height: 100%;
+            width: 0;
+            background: #e74c3c;
+            transition: width 0.3s, background 0.3s;
+        }
+
+        /* 强度标签文字 (例如 "Strength: Strong") */
+        .strength-label {
+            font-size: 12px;
+            margin-top: 4px;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <h1>👤 My Profile</h1>
+
+        <!-- ============ Profile Information Card (Part 2B 替换) ============ -->
+        <div class="card">
+            <div class="card-title">Profile Information</div>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Loading...">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Loading...">
+            </div>
+
+            <div class="info-row">
+                📅 <strong>Member since:</strong> <span id="member-since">Loading...</span>
+            </div>
+
+            <div class="info-row">
+                ⭐ <strong>Total calculations:</strong> <span id="total-calcs">Loading...</span>
+            </div>
+
+            <!-- ============ Part 3B 新加: Save 按钮 ============ -->
+            <button class="btn" id="save-profile-btn" onclick="handleSaveProfile()">
+                💾 Save Changes
+            </button>
+        </div>
+
+        <!-- ============ Part 4B 新加: Change Password 卡片 ============ -->
+        <div class="card">
+            <div class="card-title">Change Password</div>
+
+            <div class="form-group">
+                <label for="old-password">Current Password</label>
+                <input type="password" id="old-password" placeholder="Enter current password">
+            </div>
+
+            <div class="form-group">
+                <label for="new-password">New Password</label>
+                <input type="password" id="new-password" placeholder="Enter new password" oninput="updateStrength()">
+
+                <!-- 密码强度条 (Innovation) -->
+                <div class="strength-wrapper" id="strength-wrapper">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strength-fill"></div>
+                    </div>
+                    <div class="strength-label" id="strength-label">Strength: —</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm-password">Confirm New Password</label>
+                <input type="password" id="confirm-password" placeholder="Re-enter new password">
+            </div>
+
+            <button class="btn" id="change-pwd-btn" onclick="handleChangePassword()">
+                🔐 Change Password
+            </button>
+        </div>
+    </div>
+
+    <!-- ============ Part 3B 新加: Toast 通知元素 ============ -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ============================================================
+        // Part 2C: Load profile data from backend API
+        // ============================================================
+
+        // Step 1: 从 localStorage 取 token (login.html 登录时存进去的)
+        const token = localStorage.getItem('token');
+
+        // Step 2: 如果没 token, 说明用户没登录 → 踢回登录页
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Step 3: 定义一个异步函数, 调 API 拿 profile 数据
+        async function loadProfile() {
+            try {
+                // 发请求, 带上 Authorization header
+                const response = await fetch('/users/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                // 如果 token 失效 (401), 踢回登录页
+                if (response.status === 401) {
+                    localStorage.clear();
+                    window.location.href = '/login';
+                    return;
+                }
+
+                // 解析后端返回的 JSON
+                const data = await response.json();
+
+                // Step 4: 把数据填进 HTML
+                document.getElementById('username').value = data.username;
+                document.getElementById('email').value = data.email;
+
+                // Member since 字段: 把 ISO 日期转成 "May 12, 2026" 格式
+                const date = new Date(data.created_at);
+                const formatted = date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                document.getElementById('member-since').textContent = formatted;
+
+                // Total calculations 字段
+                document.getElementById('total-calcs').textContent = data.total_calculations;
+
+            } catch (err) {
+                console.error('Failed to load profile:', err);
+                alert('Could not load profile data. Please refresh the page.');
+            }
+        }
+
+        // ============================================================
+        // Part 3C: Save profile (PUT /users/me)
+        // ============================================================
+
+        // 显示 Toast 提示 (3 秒后自动消失)
+        function showToast(text, isSuccess) {
+            const toast = document.getElementById('toast');
+            toast.textContent = text;
+            toast.className = 'toast ' + (isSuccess ? 'success' : 'error');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 处理 "Save Changes" 按钮点击
+        async function handleSaveProfile() {
+            // Step 1: 从 input 取出当前的值
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            // Step 2: 客户端验证 (在发请求前先检查, 节省网络)
+            if (username.length < 3) {
+                showToast('Username must be at least 3 characters', false);
+                return;
+            }
+            // 简单的邮箱格式检查 (有 @ 和 .)
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showToast('Please enter a valid email', false);
+                return;
+            }
+
+            // Step 3: 禁用按钮防止重复点击
+            const btn = document.getElementById('save-profile-btn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            // Step 4: 发 PUT 请求到 /users/me
+            try {
+                const response = await fetch('/users/me', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ username, email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('✓ Profile updated successfully', true);
+                    // 同步更新 localStorage 里的 username (login.html 存的)
+                    localStorage.setItem('username', data.username);
+                } else {
+                    // 后端返回错误 (例如 409 用户名冲突)
+                    showToast(data.detail || 'Update failed', false);
+                }
+            } catch (err) {
+                showToast('Network error. Please try again.', false);
+            } finally {
+                // 不管成功失败, 恢复按钮可用
+                btn.disabled = false;
+                btn.textContent = '💾 Save Changes';
+            }
+        }
+
+        // ============================================================
+        // Part 4C: Password strength meter + Change password
+        // ============================================================
+
+        // 计算密码强度分数 (0-6)
+        function calculateStrength(pwd) {
+            let score = 0;
+            if (pwd.length >= 8) score++;        // 至少 8 位
+            if (pwd.length >= 12) score++;       // 至少 12 位 (额外加分)
+            if (/[A-Z]/.test(pwd)) score++;      // 包含大写字母
+            if (/[a-z]/.test(pwd)) score++;      // 包含小写字母
+            if (/[0-9]/.test(pwd)) score++;      // 包含数字
+            if (/[^A-Za-z0-9]/.test(pwd)) score++;  // 包含特殊字符
+            return score; // 0..6
+        }
+
+        // 实时更新密码强度条 (每输入一个字符就触发)
+        function updateStrength() {
+            const pwd = document.getElementById('new-password').value;
+            const wrapper = document.getElementById('strength-wrapper');
+            const fill = document.getElementById('strength-fill');
+            const label = document.getElementById('strength-label');
+
+            // 没输入时隐藏强度条
+            if (pwd.length === 0) {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            // 显示强度条
+            wrapper.style.display = 'block';
+
+            // 计算分数和百分比
+            const score = calculateStrength(pwd);
+            const percent = (score / 6) * 100;
+            fill.style.width = percent + '%';
+
+            // 根据分数确定颜色和文字
+            let text, color;
+            if (score <= 2) {
+                text = 'Weak';
+                color = '#e74c3c';   // 红色
+            } else if (score <= 4) {
+                text = 'Medium';
+                color = '#f39c12';   // 黄/橙色
+            } else {
+                text = 'Strong';
+                color = '#28a745';   // 绿色
+            }
+            fill.style.background = color;
+            label.textContent = 'Strength: ' + text;
+            label.style.color = color;
+        }
+
+        // 处理 "Change Password" 按钮点击
+        async function handleChangePassword() {
+            // Step 1: 取三个输入框的值
+            const oldPassword = document.getElementById('old-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            // Step 2: 客户端验证
+            if (oldPassword.length === 0) {
+                showToast('Please enter your current password', false);
+                return;
+            }
+
+            // 检查新密码强度: 8+ 位, 大写, 小写, 数字 都要有
+            const strongEnough =
+                newPassword.length >= 8 &&
+                /[A-Z]/.test(newPassword) &&
+                /[a-z]/.test(newPassword) &&
+                /[0-9]/.test(newPassword);
+
+            if (!strongEnough) {
+                showToast('New password must be 8+ chars with uppercase, lowercase, and digit', false);
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showToast('New password and confirmation do not match', false);
+                return;
+            }
+
+            // Step 3: 禁用按钮防重复点击
+            const btn = document.getElementById('change-pwd-btn');
+            btn.disabled = true;
+            btn.textContent = 'Changing...';
+
+            // Step 4: 发 POST 请求到 /users/me/password
+            try {
+                const response = await fetch('/users/me/password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        old_password: oldPassword,
+                        new_password: newPassword,
+                        confirm_password: confirmPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('✓ Password changed! Redirecting to login...', true);
+                    // ⭐ Security 最佳实践: 改完密码强制重新登录
+                    setTimeout(() => {
+                        localStorage.clear();
+                        window.location.href = '/login';
+                    }, 1500);
+                } else {
+                    // 后端返回错误 (例如 401 旧密码不对)
+                    showToast(data.detail || 'Password change failed', false);
+                    btn.disabled = false;
+                    btn.textContent = '🔐 Change Password';
+                }
+            } catch (err) {
+                showToast('Network error. Please try again.', false);
+                btn.disabled = false;
+                btn.textContent = '🔐 Change Password';
+            }
+        }
+
+        // Step 5: 页面一加载就调用 loadProfile()
+        loadProfile();
+    </script>
+
+</body>
+
+</html>
