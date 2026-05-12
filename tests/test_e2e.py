@@ -236,3 +236,134 @@ def test_unauthorized_access_calculations(page: Page):
     page.goto(f"{BASE_URL}/calculations-page")
     page.wait_for_timeout(2000)
     expect(page).to_have_url(re.compile(r".*/login"))
+
+
+# ============================================================
+# Final Project: E2E tests for profile & password change page
+# ============================================================
+
+def _register_via_api(page, username, email, password):
+    """Helper: register a user via API (skip UI for speed)."""
+    page.request.post(f"{BASE_URL}/users/register", data={
+        "username": username,
+        "email": email,
+        "password": password,
+    })
+
+
+def _login_via_ui(page, username, password):
+    """Helper: log in through the UI; token is stored in localStorage."""
+    page.goto(f"{BASE_URL}/login")
+    page.fill("#username", username)
+    page.fill("#password", password)
+    page.click("#login-btn")
+    # Wait for successful redirect after login
+    page.wait_for_url(f"{BASE_URL}/calculations-page", timeout=10000)
+
+
+# -------------------- E2E Test 1: View profile after login --------------------
+
+def test_e2e_view_profile_after_login(page: Page):
+    """After login, the profile page should display the user's data."""
+    username, email, password = unique_user()
+    _register_via_api(page, username, email, password)
+    _login_via_ui(page, username, password)
+
+    page.goto(f"{BASE_URL}/profile")
+
+    # Wait for loadProfile() to populate the form fields
+    expect(page.locator("#username")).to_have_value(username, timeout=5000)
+    expect(page.locator("#email")).to_have_value(email)
+
+    # Innovation: total_calculations field should be displayed
+    expect(page.locator("#total-calcs")).to_have_text("0")
+
+
+# -------------------- E2E Test 2: Update email shows toast --------------------
+
+def test_e2e_update_email_shows_toast(page: Page):
+    """Updating email should show a success toast and persist to DB."""
+    username, email, password = unique_user()
+    new_email = f"updated{_counter}@example.com"
+    _register_via_api(page, username, email, password)
+    _login_via_ui(page, username, password)
+
+    page.goto(f"{BASE_URL}/profile")
+    expect(page.locator("#email")).to_have_value(email, timeout=5000)
+
+    # Change email and click Save
+    page.fill("#email", new_email)
+    page.click("#save-profile-btn")
+
+    # Success toast should appear
+    toast = page.locator("#toast")
+    expect(toast).to_be_visible(timeout=5000)
+    expect(toast).to_have_class(re.compile("success"))
+    expect(toast).to_contain_text("Profile updated successfully")
+
+    # Reload to verify the email was actually saved to the database
+    page.reload()
+    expect(page.locator("#email")).to_have_value(new_email, timeout=5000)
+
+
+# -------------------- E2E Test 3: Unauthenticated redirect --------------------
+
+def test_e2e_profile_redirects_when_not_logged_in(page: Page):
+    """Accessing /profile without a token should redirect to /login (Security)."""
+    page.goto(f"{BASE_URL}/login")
+    page.evaluate("localStorage.clear()")
+
+    page.goto(f"{BASE_URL}/profile")
+    # JS should detect missing token and redirect to /login
+    page.wait_for_url(f"{BASE_URL}/login", timeout=5000)
+
+
+# -------------------- E2E Test 4: Change password redirects to login --------------------
+
+def test_e2e_change_password_redirects_to_login(page: Page):
+    """After a successful password change, the user should be redirected to /login (Security best practice)."""
+    username, email, password = unique_user()
+    new_password = "NewSecurePass456"
+    _register_via_api(page, username, email, password)
+    _login_via_ui(page, username, password)
+
+    page.goto(f"{BASE_URL}/profile")
+    expect(page.locator("#username")).to_have_value(username, timeout=5000)
+
+    # Fill in all three password fields and submit
+    page.fill("#old-password", password)
+    page.fill("#new-password", new_password)
+    page.fill("#confirm-password", new_password)
+    page.click("#change-pwd-btn")
+
+    # Success toast should appear
+    toast = page.locator("#toast")
+    expect(toast).to_be_visible(timeout=5000)
+    expect(toast).to_contain_text("Password changed")
+
+    # Should auto-redirect to /login (Security)
+    page.wait_for_url(f"{BASE_URL}/login", timeout=5000)
+
+
+# -------------------- E2E Test 5: Password strength meter (Innovation) --------------------
+
+def test_e2e_password_strength_meter(page: Page):
+    """The password strength meter should update in real time as the user types (Innovation feature)."""
+    username, email, password = unique_user()
+    _register_via_api(page, username, email, password)
+    _login_via_ui(page, username, password)
+
+    page.goto(f"{BASE_URL}/profile")
+    expect(page.locator("#username")).to_have_value(username, timeout=5000)
+
+    # Initially, the strength bar should be hidden
+    expect(page.locator("#strength-wrapper")).to_be_hidden()
+
+    # Type a weak password -> should show "Weak"
+    page.fill("#new-password", "abc")
+    expect(page.locator("#strength-wrapper")).to_be_visible()
+    expect(page.locator("#strength-label")).to_contain_text("Weak")
+
+    # Type a strong password -> should show "Strong"
+    page.fill("#new-password", "MyStrong123!Pass")
+    expect(page.locator("#strength-label")).to_contain_text("Strong")
